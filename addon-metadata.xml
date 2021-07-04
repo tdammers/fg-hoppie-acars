@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<PropertyList>
+  <meta>
+    <file-type type="string">FlightGear add-on metadata</file-type>
+    <format-version type="int">1</format-version>
+  </meta>
+
+  <addon>
+    <identifier type="string">nl.tobiasdammers.fg-hoppie-acars</identifier>
+    <name type="string">Hoppie ACARS</name>
+    <version type="string">0.1.0</version>
+
+    <authors>
+      <author>
+        <name type="string">Tobias Dammers</name>
+        <email type="string">tdammers@gmail.com</email>
+        <url type="string">https://github.com/tdammers</url>
+      </author>
+    </authors>
+
+    <maintainers>
+      <maintainer>
+        <name type="string">Tobias Dammers</name>
+        <email type="string">tdammers@gmail.com</email>
+        <url type="string">https://github.com/tdammers</url>
+      </maintainer>
+    </maintainers>
+
+    <short-description type="string">
+      Hoppie ACARS connectivity
+    </short-description>
+
+    <long-description type="string">
+    </long-description>
+
+    <license>
+      <designation type="string">
+        MIT
+      </designation>
+
+      <url type="string">https://mit-license.org/</url>
+    </license>
+
+    <min-FG-version type="string">2017.4.0</min-FG-version>
+    <max-FG-version type="string">none</max-FG-version>
+
+    <urls>
+      <home-page type="string">
+        https://github.com/tdammers/fg-hoppie-acars
+      </home-page>
+
+      <download type="string">
+        https://github.com/tdammers/fg-hoppie-acars
+      </download>
+
+      <support type="string">
+      </support>
+
+      <code-repository type="string">
+        https://github.com/tdammers/fg-hoppie-acars
+      </code-repository>
+    </urls>
+
+    <tags>
+      <tag type="string">acars</tag>
+      <tag type="string">hoppie</tag>
+      <tag type="string">cpdlc</tag>
+    </tags>
+
+  </addon>
+</PropertyList>

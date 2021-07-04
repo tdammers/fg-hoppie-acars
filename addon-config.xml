@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<PropertyList>
+    <sim>
+        <hoppie>
+            <token userarchive="y"></token>
+            <cpdlc>
+                <current-station type="string"></current-station>
+                <next-station type="string"></next-station>
+            </cpdlc>
+        </hoppie>
+    </sim>
+</PropertyList>
