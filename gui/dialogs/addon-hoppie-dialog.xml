@@ -2,7 +2,7 @@
 <PropertyList>
     <name>addon-hoppie-dialog</name>
     <layout>vbox</layout>
-	<width>200</width>
+	<width>600</width>
 
 	<group>
 		<layout>hbox</layout>
@@ -27,9 +27,87 @@
 		</button>
 	</group>
 	<hrule />
+    <group>
+		<layout>hbox</layout>
+        <button>
+            <legend>Start</legend>
+            <binding>
+                <command>nasal</command>
+                <script>globals.acars.start();</script>
+            </binding>
+        </button>
+        <button>
+            <legend>Stop</legend>
+            <binding>
+                <command>nasal</command>
+                <script>globals.acars.stop();</script>
+            </binding>
+        </button>
+    </group>
+	<hrule />
+    <textbox>
+        <halign>fill</halign>
+        <valign>fill</valign>
+        <stretch>true</stretch>
+        <pref-width>350</pref-width>
+        <pref-height>150</pref-height>
+        <padding>5</padding>
+        <slider>20</slider>
+        <live>true</live>
+        <wrap>true</wrap>
+        <editable>false</editable>
+        <top-line>-1</top-line>
+        <property>/acars/downlink/formatted</property>
+    </textbox>
+    <button>
+        <legend>Clear</legend>
+        <binding>
+            <command>property-assign</command>
+            <property>/acars/downlink/formatted</property>
+            <value type="string"></value>
+        </binding>
+    </button>
+    <hrule />
     <text>
-		<label>Nothing to see here yet</label>
+		<label>TELEX</label>
 	</text>
+	<group n="100">
+		<layout>hbox</layout>
+        <text>
+            <property>/sim/multiplay/callsign</property>
+        </text>
+        <input n="0">
+            <width>100</width>
+            <label>to</label>
+            <property>/acars/dialog/to</property>
+            <name>to</name>
+        </input>
+        <input n="1">
+            <width>400</width>
+            <label>message</label>
+            <property>/acars/dialog/message</property>
+            <name>to</name>
+        </input>
+        <button>
+            <legend>Send</legend>
+            <binding>
+                <command>dialog-apply</command>
+                <object-name>to</object-name>
+            </binding>
+            <binding>
+                <command>dialog-apply</command>
+                <object-name>message</object-name>
+            </binding>
+            <binding>
+                <command>nasal</command>
+                <script><![CDATA[
+                    var to = getprop('/acars/dialog/to');
+                    var message = getprop('/acars/dialog/message');
+                    acars.send(to, 'telex', message);
+                ]]></script>
+            </binding>
+        </button>
+    </group>
 
 	<button>
 		<legend>Close</legend>

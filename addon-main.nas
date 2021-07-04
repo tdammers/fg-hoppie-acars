@@ -2,7 +2,28 @@ var ACARS = {
     new: func () {
         return {
             parents: [ACARS],
+            downlinkNode: props.globals.getNode('/acars/downlink', 1),
+            pollTimer: nil,
         };
+    },
+
+    start: func () {
+        print("ACARS start");
+        if (me.pollTimer == nil) {
+            me.pollTimer = maketimer(5, me, me.poll);
+            me.pollTimer.simulatedTime = 1;
+            me.pollTimer.singleShot = 0;
+        }
+        if (!me.pollTimer.isRunning) {
+            me.pollTimer.start();
+        }
+    },
+
+    stop: func () {
+        print("ACARS stop");
+        if (me.pollTimer != nil) {
+            me.pollTimer.stop();
+        }
     },
 
     # Low-level ACARS send function
@@ -26,8 +47,30 @@ var ACARS = {
     poll: func () {
         me.send('ZZZZ', 'poll', '', func(rp) {
             var items = parsePollResponse(rp);
-            debug.dump(items);
+            foreach (var item; items) {
+                me.processResponse(item);
+            }
         });
+    },
+
+    downlink: func(type, from, text) {
+        var msgNode = me.downlinkNode.addChild('message');
+        msgNode.setValue('type', type);
+        msgNode.setValue('from', from);
+        msgNode.setValue('text', text);
+        msgNode.setValue('status', 'new');
+        var formattedNode = me.downlinkNode.getNode('formatted');
+        formattedNode.setValue(formattedNode.getValue() ~ "\n---\n" ~
+            sprintf("%s %s\n%s", from, type, text));
+    },
+
+    processResponse: func(item) {
+        if (item.type == 'telex') {
+            me.downlink('telex', item.from, item.packet);
+        }
+        else {
+            debug.dump('Ignoring response item', item);
+        }
     },
 };
 
@@ -53,7 +96,7 @@ var parsePollResponse = func (str) {
             debug.dump('PARSER ERROR 2: ' ~ str);
             return items;
         }
-        var to = left(str, i);
+        var from = left(str, i);
         str = substr(str, i + 1);
         while (left(str, 1) == ' ') str = substr(str, 1);
 
@@ -85,7 +128,7 @@ var parsePollResponse = func (str) {
         str = substr(str, 2);
         while (left(str, 1) == ' ') str = substr(str, 1);
         append(items,
-            { to: to
+            { from: from
             , type: type
             , packet: packet
             });
@@ -95,6 +138,7 @@ var parsePollResponse = func (str) {
 };
 
 var unload = func(addon) {
+    globals.acars.stop();
 };
 
 var main = func(addon) {

@@ -2,11 +2,14 @@
 <PropertyList>
     <sim>
         <hoppie>
-            <token userarchive="y"></token>
-            <cpdlc>
-                <current-station type="string"></current-station>
-                <next-station type="string"></next-station>
-            </cpdlc>
+            <!-- <token userarchive="y" type="string" /> -->
         </hoppie>
     </sim>
+    <acars>
+        <!-- downlink TELEX messages can be appended as <message>
+             children -->
+        <downlink>
+            <formatted type="string"/>
+        </downlink>
+    </acars>
 </PropertyList>
