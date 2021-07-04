@@ -1,0 +1,13 @@
+FG Hoppie ACARS Addon
+=====================
+
+What Is This?
+-------------
+This is an add-on for FlightGear, which implements an ACARS system based on
+Hoppie's ACARS (http://www.hoppie.nl/acars/).
+
+What It Does
+------------
+Right now, not much. Loading the add-on will create a Nasal object,
+`globals.acars`, which can connect to Hoppie's server and send and retrieve
+raw ACARS messages.
