@@ -3,11 +3,73 @@ FG Hoppie ACARS Addon
 
 What Is This?
 -------------
+
 This is an add-on for FlightGear, which implements an ACARS system based on
 Hoppie's ACARS (http://www.hoppie.nl/acars/).
 
 What It Does
 ------------
-Right now, not much. Loading the add-on will create a Nasal object,
-`globals.acars`, which can connect to Hoppie's server and send and retrieve
-raw ACARS messages.
+
+Loading the add-on will create a Nasal object, `globals.acars`, which can
+connect to Hoppie's server and send and retrieve raw ACARS messages. Some
+essential ACARS state will also be exposed throught the property tree, under
+the `/acars` node.
+
+The intended use is to implement ACARS applications either aircraft-side, or as
+separate addons. No facilities are provided for this, except some basic CPDLC
+parsing functionality (see below).
+
+An ACARS dialog is provided that can be used to start and stop the Hoppie
+connection, and it also allows sending and receiving ACARS messages directly
+(though, again, the intended use is through aircraft-specific in-sim
+interfaces, typically a CDU or MCDU).
+
+Configuration
+-------------
+
+In order to use hoppie ACARS, you will need a logon token. Head over to
+http://hoppie.nl/acars/ to request one.
+
+This token needs to be made available to the add-on in the `/sim/hoppie/token`
+property; one way you can achieve this is adding something like this to your
+preferences.xml:
+
+    <sim>
+        <hoppie>
+            <token type="text">YourSecretLogonTokenHere</token>
+        </hoppie>
+    </sim>
+
+Nasal API
+---------
+
+`globals.acars.start()` - start the ACARS system. Note that sending messages is
+    currently possible even when the system is not started, but no downlink
+    messages are received. When the ACARS system is started, it will poll the
+    hoppie server for new messages once per second.
+`globals.acars.stop()` - stops the ACARS system. See above.
+`globals.acars.clear()` - clears out all message logs.
+`globals.acars.send(to, type, packet, done)` - Send an ACARS uplink message.
+    The 'from' field is filled automatically based on your current callsign.
+    - 'to' is the recieving ACARS station. For some message types, this is
+      ignored; for some types, it should be your own callsign (inforeq); for
+      most types however it should be the receiving ACARS station.
+    - 'type' can be one of `telex` (free-form text), `progress` (OOOI report),
+      `position` (position report), `datareq` (data request, download a flight
+      plan or similar), `inforeq` (information request), `cpdlc` (CPDLC
+      message)
+    - 'packet' is the payload. The format depends on the message type.
+    - 'done' is an optional callback function that will be called when the
+      message has been sent successfully.
+
+Property Interface
+------------------
+
+`/acars/status-text` - a textual indication of whether the ACARS system is
+    currently running.
+`/acars/uplink` - this node will hold one `message` child for each uplink
+    message enqueued or sent.
+`/acars/downlink` - this node will hold one `message` child for each downlink
+    message enqueued or sent.
+`/acars/formatted-log` - a formatted textual log of all uplink and downlink
+    messages.
