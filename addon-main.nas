@@ -31,11 +31,12 @@ var ACARS = {
         var logon = getprop('/sim/hoppie/token');
         var from = getprop('/sim/multiplay/callsign');
         var url = 'http://www.hoppie.nl/acars/system/connect.html?' ~
-                  'logon=' ~ logon ~
-                  '&from=' ~ from ~ 
-                  '&to=' ~ to ~
-                  '&type=' ~ type ~
-                  '&packet=' ~ packet;
+                  'logon=' ~ urlencode(logon) ~
+                  '&from=' ~ urlencode(from) ~ 
+                  '&to=' ~ urlencode(to) ~
+                  '&type=' ~ urlencode(type) ~
+                  '&packet=' ~ urlencode(packet);
+        print("Request: " ~ url);
         http.load(url).done(func(r) {
             print("Response: " ~ r.response);
             if (typeof(done) == 'func') {
@@ -65,11 +66,12 @@ var ACARS = {
     },
 
     processResponse: func(item) {
-        if (item.type == 'telex') {
-            me.downlink('telex', item.from, item.packet);
+        if (item.type == 'cpdlc') {
+            # me.downlink(item.type, item.from, item.packet);
+            debug.dump('CPDLC', item);
         }
         else {
-            debug.dump('Ignoring response item', item);
+            me.downlink(item.type, item.from, item.packet);
         }
     },
 };
@@ -143,4 +145,23 @@ var unload = func(addon) {
 
 var main = func(addon) {
     globals.acars = ACARS.new();
+};
+
+var urlencode = func(str) {
+    var out = '';
+    var c = '';
+    var n = 0;
+    for (var i = 0; i < size(str); i += 1) {
+        n = str[i];
+        if (string.isalnum(n)) {
+            out = out ~ chr(n);
+        }
+        elsif (n == 32) {
+            out = out ~ '+';
+        }
+        else {
+            out = out ~ sprintf('%%%02x', n);
+        }
+    }
+    return out;
 };

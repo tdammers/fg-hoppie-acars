@@ -29,7 +29,9 @@
 	<hrule />
     <group>
 		<layout>hbox</layout>
+        <halign>left</halign>
         <button>
+            <halign>left</halign>
             <legend>Start</legend>
             <binding>
                 <command>nasal</command>
@@ -37,12 +39,14 @@
             </binding>
         </button>
         <button>
+            <halign>left</halign>
             <legend>Stop</legend>
             <binding>
                 <command>nasal</command>
                 <script>globals.acars.stop();</script>
             </binding>
         </button>
+        <empty/>
     </group>
 	<hrule />
     <textbox>
@@ -56,37 +60,75 @@
         <live>true</live>
         <wrap>true</wrap>
         <editable>false</editable>
-        <top-line>-1</top-line>
+        <top-line>-4</top-line>
         <property>/acars/downlink/formatted</property>
     </textbox>
     <button>
         <legend>Clear</legend>
+        <halign>right</halign>
         <binding>
             <command>property-assign</command>
             <property>/acars/downlink/formatted</property>
             <value type="string"></value>
         </binding>
     </button>
-    <hrule />
+
     <text>
-		<label>TELEX</label>
+		<label>FREE TEXT</label>
 	</text>
+    <hrule />
 	<group n="100">
-		<layout>hbox</layout>
+		<layout>table</layout>
+        <text>
+            <label>FROM</label>
+            <row>0</row>
+            <col>0</col>
+        </text>
+        <text>
+            <label>TO</label>
+            <row>0</row>
+            <col>1</col>
+        </text>
+        <text>
+            <label>TYPE</label>
+            <row>0</row>
+            <col>2</col>
+        </text>
+        <text>
+            <label>MESSAGE</label>
+            <row>0</row>
+            <col>3</col>
+        </text>
+
         <text>
             <property>/sim/multiplay/callsign</property>
+            <row>1</row>
+            <col>0</col>
         </text>
-        <input n="0">
+        <input>
             <width>100</width>
-            <label>to</label>
             <property>/acars/dialog/to</property>
             <name>to</name>
+            <row>1</row>
+            <col>1</col>
         </input>
-        <input n="1">
-            <width>400</width>
-            <label>message</label>
+        <combo>
+            <property>/acars/dialog/type</property>
+            <name>type</name>
+            <value>telex</value>
+            <value>progress</value>
+            <value>position</value>
+            <value>datareq</value>
+            <value>inforeq</value>
+            <row>1</row>
+            <col>2</col>
+        </combo>
+        <input>
+            <preferred-width>400</preferred-width>
             <property>/acars/dialog/message</property>
-            <name>to</name>
+            <name>message</name>
+            <row>1</row>
+            <col>3</col>
         </input>
         <button>
             <legend>Send</legend>
@@ -99,13 +141,20 @@
                 <object-name>message</object-name>
             </binding>
             <binding>
+                <command>dialog-apply</command>
+                <object-name>type</object-name>
+            </binding>
+            <binding>
                 <command>nasal</command>
                 <script><![CDATA[
-                    var to = getprop('/acars/dialog/to');
-                    var message = getprop('/acars/dialog/message');
-                    acars.send(to, 'telex', message);
+                    var to = string.uc(getprop('/acars/dialog/to'));
+                    var message = string.uc(getprop('/acars/dialog/message'));
+                    var type = string.lc(getprop('/acars/dialog/type'));
+                    acars.send(to, type, message);
                 ]]></script>
             </binding>
+            <row>1</row>
+            <col>4</col>
         </button>
     </group>
 
