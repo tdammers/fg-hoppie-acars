@@ -3,6 +3,8 @@ var ACARS = {
         return {
             parents: [ACARS],
             downlinkNode: props.globals.getNode('/acars/downlink', 1),
+            uplinkNode: props.globals.getNode('/acars/uplink', 1),
+            formattedLogNode: props.globals.getNode('/acars/formatted-log', 1),
             pollTimer: nil,
         };
     },
@@ -10,13 +12,14 @@ var ACARS = {
     start: func () {
         print("ACARS start");
         if (me.pollTimer == nil) {
-            me.pollTimer = maketimer(5, me, me.poll);
+            me.pollTimer = maketimer(1, me, me.poll);
             me.pollTimer.simulatedTime = 1;
             me.pollTimer.singleShot = 0;
         }
         if (!me.pollTimer.isRunning) {
             me.pollTimer.start();
         }
+        setprop('/acars/status-text', 'running');
     },
 
     stop: func () {
@@ -24,6 +27,13 @@ var ACARS = {
         if (me.pollTimer != nil) {
             me.pollTimer.stop();
         }
+        setprop('/acars/status-text', 'stopped');
+    },
+
+    clearMessages: func() {
+        me.downlinkNode.removeAllChildren();
+        me.uplinkNode.removeAllChildren();
+        me.formattedLogNode.setValue('');
     },
 
     # Low-level ACARS send function
@@ -36,9 +46,33 @@ var ACARS = {
                   '&to=' ~ urlencode(to) ~
                   '&type=' ~ urlencode(type) ~
                   '&packet=' ~ urlencode(packet);
+        var msgNode = nil;
         print("Request: " ~ url);
+        if (type != 'poll') {
+            msgNode = me.uplinkNode.addChild('message');
+            msgNode.setValue('type', type);
+            msgNode.setValue('from', from);
+            msgNode.setValue('packet', packet);
+            msgNode.setValue('status', 'pending');
+            if (type == 'cpdlc') {
+                var cpdlc = me.parseCPDLC(packet);
+                msgNode.setValues(cpdlc);
+                me.appendLog(
+                    sprintf(">>>> %s %s %s/%s %s\n%s\n",
+                        to, type,
+                        cpdlc.min, cpdlc.mrn, cpdlc.ra,
+                        string.join("\n", cpdlc.message)));
+            }
+            else {
+                me.appendLog(sprintf(">>>> %s %s\n%s\n", to, type, packet));
+            }
+            msgNode.setValue('status', 'sending');
+        }
         http.load(url).done(func(r) {
             print("Response: " ~ r.response);
+            if (msgNode != nil) {
+                msgNode.setValue('status', 'sent');
+            }
             if (typeof(done) == 'func') {
                 done(r.response);
             }
@@ -47,96 +81,127 @@ var ACARS = {
 
     poll: func () {
         me.send('ZZZZ', 'poll', '', func(rp) {
-            var items = parsePollResponse(rp);
+            var items = me.parsePollResponse(rp);
             foreach (var item; items) {
                 me.processResponse(item);
             }
         });
     },
 
-    downlink: func(type, from, text) {
+    processResponse: func(item) {
+        me.downlink(item.type, item.from, item.packet);
+    },
+
+    downlink: func(type, from, packet) {
         var msgNode = me.downlinkNode.addChild('message');
         msgNode.setValue('type', type);
         msgNode.setValue('from', from);
-        msgNode.setValue('text', text);
+        msgNode.setValue('packet', packet);
         msgNode.setValue('status', 'new');
-        var formattedNode = me.downlinkNode.getNode('formatted');
-        formattedNode.setValue(formattedNode.getValue() ~ "\n---\n" ~
-            sprintf("%s %s\n%s", from, type, text));
-    },
-
-    processResponse: func(item) {
-        if (item.type == 'cpdlc') {
-            # me.downlink(item.type, item.from, item.packet);
-            debug.dump('CPDLC', item);
+        if (type == 'cpdlc') {
+            var cpdlc = me.parseCPDLC(packet);
+            msgNode.setValues(cpdlc);
+            me.appendLog(
+                sprintf("<<<< %s %s %s/%s %s\n%s\n",
+                    from, type,
+                    cpdlc.min, cpdlc.mrn, cpdlc.ra,
+                    string.join("\n", cpdlc.message)));
         }
         else {
-            me.downlink(item.type, item.from, item.packet);
+            me.appendLog(sprintf("<<<< %s %s\n%s\n", from, type, packet));
         }
     },
-};
 
-var parsePollResponse = func (str) {
-    var i = 0;
+    appendLog: func(text) {
+        var formattedNode = me.formattedLogNode;
+        formattedNode.setValue(formattedNode.getValue() ~ text);
+    },
 
-    if (left(str, 3) != 'ok ') {
-        debug.dump('INVALID POLL RESPONSE: ' ~ str);
-        return [];
-    }
-    str = substr(str, 3);
-    var items = [];
+    parsePollResponse: func (str) {
+        var i = 0;
 
-    while (size(str) > 0) {
-        if (left(str, 1) != '{') {
-            debug.dump('PARSER ERROR 1: ' ~ str);
-            return items;
+        if (left(str, 3) != 'ok ') {
+            debug.dump('INVALID POLL RESPONSE: ' ~ str);
+            return [];
         }
-        str = substr(str, 1);
-        while (left(str, 1) == ' ') str = substr(str, 1);
-        i = find(' ', str);
-        if (i < 0) {
-            debug.dump('PARSER ERROR 2: ' ~ str);
-            return items;
-        }
-        var from = left(str, i);
-        str = substr(str, i + 1);
-        while (left(str, 1) == ' ') str = substr(str, 1);
+        str = substr(str, 3);
+        var items = [];
 
-        i = find(' ', str);
-        if (i < 0) {
-            debug.dump('PARSER ERROR 3: ' ~ str);
-            return items;
-        }
-        var type = left(str, i);
-        str = substr(str, i + 1);
-        while (left(str, 1) == ' ') str = substr(str, 1);
+        while (size(str) > 0) {
+            if (left(str, 1) != '{') {
+                debug.dump('PARSER ERROR 1: ' ~ str);
+                return items;
+            }
+            str = substr(str, 1);
+            while (left(str, 1) == ' ') str = substr(str, 1);
+            i = find(' ', str);
+            if (i < 0) {
+                debug.dump('PARSER ERROR 2: ' ~ str);
+                return items;
+            }
+            var from = left(str, i);
+            str = substr(str, i + 1);
+            while (left(str, 1) == ' ') str = substr(str, 1);
 
-        if (left(str, 1) != '{') {
-            debug.dump('PARSER ERROR 4: ' ~ str);
-            return items;
-        }
-        str = substr(str, 1);
-        i = find('}', str);
-        if (i < 0) {
-            debug.dump('PARSER ERROR 5: ' ~ str);
-            return items;
-        }
-        var packet = left(str, i);
-        str = substr(str, i);
-        if (left(str, 2) != '}}') {
-            debug.dump('PARSER ERROR 6: ' ~ str);
-            return items;
-        }
-        str = substr(str, 2);
-        while (left(str, 1) == ' ') str = substr(str, 1);
-        append(items,
-            { from: from
-            , type: type
-            , packet: packet
-            });
-    }
+            i = find(' ', str);
+            if (i < 0) {
+                debug.dump('PARSER ERROR 3: ' ~ str);
+                return items;
+            }
+            var type = left(str, i);
+            str = substr(str, i + 1);
+            while (left(str, 1) == ' ') str = substr(str, 1);
 
-    return items;
+            if (left(str, 1) != '{') {
+                debug.dump('PARSER ERROR 4: ' ~ str);
+                return items;
+            }
+            str = substr(str, 1);
+            i = find('}', str);
+            if (i < 0) {
+                debug.dump('PARSER ERROR 5: ' ~ str);
+                return items;
+            }
+            var packet = left(str, i);
+            str = substr(str, i);
+            if (left(str, 2) != '}}') {
+                debug.dump('PARSER ERROR 6: ' ~ str);
+                return items;
+            }
+            str = substr(str, 2);
+            while (left(str, 1) == ' ') str = substr(str, 1);
+            append(items,
+                { from: from
+                , type: type
+                , packet: packet
+                });
+        }
+
+        return items;
+    },
+
+    parseCPDLC: func (str) {
+        # /data2/654/3/NE/LOGON ACCEPTED
+        var result = split('/', string.uc(str));
+        if (result[0] != '') {
+            debug.dump('PARSER ERROR 10: expected leading slash in ' ~ str);
+            return nil;
+        }
+        if (result[1] != 'DATA2') {
+            debug.dump('PARSER ERROR 11: expected `data2` in ' ~ str);
+            return nil;
+        }
+        var min = result[2];
+        var mrn = result[3];
+        var ra = result[4];
+        var message = subvec(result, 5);
+        return {
+            min: min,
+            mrn: mrn,
+            ra: ra,
+            message: message,
+        }
+    },
 };
 
 var unload = func(addon) {

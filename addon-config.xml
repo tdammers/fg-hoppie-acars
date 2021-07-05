@@ -8,8 +8,16 @@
     <acars>
         <!-- downlink TELEX messages can be appended as <message>
              children -->
+        <status-text type="string">stopped</status-text>
+        <uplink>
+        </uplink>
         <downlink>
-            <formatted type="string"/>
         </downlink>
+        <formatted-log type="string"/>
+        <dialog>
+            <to type="string"/>
+            <type type="string">telex</type>
+            <message type="string"/>
+        </dialog>
     </acars>
 </PropertyList>

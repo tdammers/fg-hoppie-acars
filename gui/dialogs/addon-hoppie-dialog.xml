@@ -46,6 +46,10 @@
                 <script>globals.acars.stop();</script>
             </binding>
         </button>
+        <text>
+            <property>/acars/status-text</property>
+            <live>true</live>
+        </text>
         <empty/>
     </group>
 	<hrule />
@@ -61,15 +65,14 @@
         <wrap>true</wrap>
         <editable>false</editable>
         <top-line>-4</top-line>
-        <property>/acars/downlink/formatted</property>
+        <property>/acars/formatted-log</property>
     </textbox>
     <button>
         <legend>Clear</legend>
         <halign>right</halign>
         <binding>
-            <command>property-assign</command>
-            <property>/acars/downlink/formatted</property>
-            <value type="string"></value>
+            <command>nasal</command>
+            <script>globals.acars.clearMessages();</script>
         </binding>
     </button>
 
@@ -120,6 +123,7 @@
             <value>position</value>
             <value>datareq</value>
             <value>inforeq</value>
+            <value>cpdlc</value>
             <row>1</row>
             <col>2</col>
         </combo>
