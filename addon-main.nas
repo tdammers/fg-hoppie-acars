@@ -10,7 +10,6 @@ var ACARS = {
     },
 
     start: func () {
-        print("ACARS start");
         if (me.pollTimer == nil) {
             me.pollTimer = maketimer(1, me, me.poll);
             me.pollTimer.simulatedTime = 1;
@@ -23,7 +22,6 @@ var ACARS = {
     },
 
     stop: func () {
-        print("ACARS stop");
         if (me.pollTimer != nil) {
             me.pollTimer.stop();
         }
@@ -31,8 +29,6 @@ var ACARS = {
     },
 
     clearMessages: func() {
-        me.downlinkNode.removeAllChildren();
-        me.uplinkNode.removeAllChildren();
         me.formattedLogNode.setValue('');
     },
 
@@ -47,36 +43,29 @@ var ACARS = {
                   '&type=' ~ urlencode(type) ~
                   '&packet=' ~ urlencode(packet);
         var msgNode = nil;
-        print("Request: " ~ url);
         if (type != 'poll') {
-            msgNode = me.uplinkNode.addChild('message');
-            msgNode.setValue('type', type);
+            msgNode = me.downlinkNode;
             msgNode.setValue('from', from);
+            msgNode.setValue('to', to);
+            msgNode.setValue('type', type);
             msgNode.setValue('packet', packet);
-            msgNode.setValue('status', 'pending');
-            if (type == 'cpdlc') {
-                var cpdlc = me.parseCPDLC(packet);
-                msgNode.setValues(cpdlc);
-                me.appendLog(
-                    sprintf(">>>> %s %s %s/%s %s\n%s\n",
-                        to, type,
-                        cpdlc.min, cpdlc.mrn, cpdlc.ra,
-                        string.join("\n", cpdlc.message)));
-            }
-            else {
-                me.appendLog(sprintf(">>>> %s %s\n%s\n", to, type, packet));
-            }
+            me.appendLog(sprintf(">>>> %s %s\n%s\n", to, type, packet));
             msgNode.setValue('status', 'sending');
         }
-        http.load(url).done(func(r) {
-            print("Response: " ~ r.response);
-            if (msgNode != nil) {
-                msgNode.setValue('status', 'sent');
-            }
-            if (typeof(done) == 'func') {
-                done(r.response);
-            }
-        });
+        http.load(url)
+            .done(func(r) {
+                if (msgNode != nil) {
+                    msgNode.setValue('status', 'sent');
+                }
+                if (typeof(done) == 'func') {
+                    done(r.response);
+                }
+            })
+            .fail(func {
+                if (msgNode != nil) {
+                    msgNode.setValue('status', 'error');
+                }
+            });
     },
 
     poll: func () {
@@ -89,27 +78,18 @@ var ACARS = {
     },
 
     processResponse: func(item) {
-        me.downlink(item.type, item.from, item.packet);
+        me.uplink(item.type, item.from, item.packet);
     },
 
-    downlink: func(type, from, packet) {
-        var msgNode = me.downlinkNode.addChild('message');
+    uplink: func(type, from, packet) {
+        var to = getprop('/sim/multiplay/callsign');
+        var msgNode = me.uplinkNode;
         msgNode.setValue('type', type);
         msgNode.setValue('from', from);
+        msgNode.setValue('to', to);
         msgNode.setValue('packet', packet);
         msgNode.setValue('status', 'new');
-        if (type == 'cpdlc') {
-            var cpdlc = me.parseCPDLC(packet);
-            msgNode.setValues(cpdlc);
-            me.appendLog(
-                sprintf("<<<< %s %s %s/%s %s\n%s\n",
-                    from, type,
-                    cpdlc.min, cpdlc.mrn, cpdlc.ra,
-                    string.join("\n", cpdlc.message)));
-        }
-        else {
-            me.appendLog(sprintf("<<<< %s %s\n%s\n", from, type, packet));
-        }
+        me.appendLog(sprintf("<<<< %s %s\n%s\n", from, type, packet));
     },
 
     appendLog: func(text) {
@@ -178,29 +158,6 @@ var ACARS = {
         }
 
         return items;
-    },
-
-    parseCPDLC: func (str) {
-        # /data2/654/3/NE/LOGON ACCEPTED
-        var result = split('/', string.uc(str));
-        if (result[0] != '') {
-            debug.dump('PARSER ERROR 10: expected leading slash in ' ~ str);
-            return nil;
-        }
-        if (result[1] != 'DATA2') {
-            debug.dump('PARSER ERROR 11: expected `data2` in ' ~ str);
-            return nil;
-        }
-        var min = result[2];
-        var mrn = result[3];
-        var ra = result[4];
-        var message = subvec(result, 5);
-        return {
-            min: min,
-            mrn: mrn,
-            ra: ra,
-            message: message,
-        }
     },
 };
 

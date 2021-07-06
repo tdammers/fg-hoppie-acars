@@ -8,11 +8,9 @@
     <acars>
         <!-- downlink TELEX messages can be appended as <message>
              children -->
-        <status-text type="string">stopped</status-text>
-        <uplink>
-        </uplink>
-        <downlink>
-        </downlink>
+        <status-text type="string">n/a</status-text>
+        <uplink/>
+        <downlink/>
         <formatted-log type="string"/>
         <dialog>
             <to type="string"/>
