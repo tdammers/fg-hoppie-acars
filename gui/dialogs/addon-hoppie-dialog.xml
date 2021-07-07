@@ -46,10 +46,21 @@
                 <script>globals.acars.stop();</script>
             </binding>
         </button>
+
         <text>
             <property>/acars/status-text</property>
+            <pref-width>100</pref-width>
             <live>true</live>
         </text>
+
+        <button>
+            <halign>right</halign>
+            <legend>Reload Addon</legend>
+            <binding>
+                <command>addon-reload</command>
+                <id>nl.tobiasdammers.fg-hoppie-acars</id>
+            </binding>
+        </button> 
         <empty/>
     </group>
 	<hrule />
@@ -77,39 +88,45 @@
     </button>
 
     <text>
-		<label>FREE TEXT</label>
+		<label>RAW ACARS</label>
 	</text>
     <hrule />
 	<group n="100">
 		<layout>table</layout>
         <text>
             <label>FROM</label>
+            <halign>left</halign>
             <row>0</row>
             <col>0</col>
         </text>
         <text>
             <label>TO</label>
+            <halign>left</halign>
             <row>0</row>
             <col>1</col>
         </text>
         <text>
             <label>TYPE</label>
+            <halign>left</halign>
             <row>0</row>
             <col>2</col>
         </text>
         <text>
             <label>MESSAGE</label>
+            <halign>left</halign>
             <row>0</row>
             <col>3</col>
         </text>
 
         <text>
             <property>/sim/multiplay/callsign</property>
+            <halign>left</halign>
             <row>1</row>
             <col>0</col>
         </text>
         <input>
             <width>100</width>
+            <halign>left</halign>
             <property>/acars/dialog/to</property>
             <name>to</name>
             <row>1</row>
@@ -118,6 +135,7 @@
         <combo>
             <property>/acars/dialog/type</property>
             <name>type</name>
+            <halign>left</halign>
             <value>telex</value>
             <value>progress</value>
             <value>position</value>
@@ -128,7 +146,8 @@
             <col>2</col>
         </combo>
         <input>
-            <preferred-width>400</preferred-width>
+            <pref-width>200</pref-width>
+            <halign>left</halign>
             <property>/acars/dialog/message</property>
             <name>message</name>
             <row>1</row>
@@ -162,6 +181,8 @@
         </button>
     </group>
 
+    <hrule/>
+            
 	<button>
 		<legend>Close</legend>
 		<binding>

@@ -161,12 +161,43 @@ var ACARS = {
     },
 };
 
+var findMenuNode = func (create=0) {
+    var equipmentMenuNode = props.globals.getNode('/sim/menubar/default/menu[5]');
+    foreach (var item; equipmentMenuNode.getChildren('item')) {
+        if (item.getValue('name') == 'acars-hoppie') {
+            return item;
+        }
+    }
+    if (create) {
+        return equipmentMenuNode.addChild('item');
+    }
+    else {
+        return nil;
+    }
+};
+
 var unload = func(addon) {
     globals.acars.stop();
+    var myMenuNode = findMenuNode();
+    if (myMenuNode != nil) {
+        myMenuNode.remove();
+        fgcommand('reinit', {'subsystem': 'gui'});
+    }
 };
 
 var main = func(addon) {
     globals.acars = ACARS.new();
+    var myMenuNode = findMenuNode(1);
+    myMenuNode.setValues({
+        enabled: 'true',
+        name: 'acars-hoppie',
+        label: 'ACARS (Hoppie)',
+        binding: {
+            'command': 'dialog-show',
+            'dialog-name': 'addon-hoppie-dialog',
+        },
+    });
+    fgcommand('reinit', {'subsystem': 'gui'});
 };
 
 var urlencode = func(str) {
