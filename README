@@ -30,13 +30,25 @@ Configuration
 In order to use hoppie ACARS, you will need a logon token. Head over to
 http://hoppie.nl/acars/ to request one.
 
-This token needs to be made available to the add-on in the `/sim/hoppie/token`
-property; one way you can achieve this is adding something like this to your
+The token, along with other configuration options, will live in the
+`/sim/hoppie/` property subtree.
+
+One way you can achieve this is adding something like this to your
 preferences.xml:
 
     <sim>
         <hoppie>
-            <token type="text">YourSecretLogonTokenHere</token>
+            <!-- your Hoppie logon token -->
+            <token type="string">YourSecretLogonTokenHere</token>
+
+            <!-- Hoppie's server URL - the default should work just fine, but
+                 if you want to run against a different server, you can put
+                 its URL here. Curly braces are used for injecting variables.
+              -->
+            <url type="string">http://www.hoppie.nl/acars/system/connect.html?logon={logon}&from={from}&to={to}&type={type}&packet={packet}</url>
+
+            <!-- If true, automatically start Hoppie ACARS upon load. -->
+            <autostart type="bool">false</autostart>
         </hoppie>
     </sim>
 

@@ -6,8 +6,6 @@
         </hoppie>
     </sim>
     <acars>
-        <!-- downlink TELEX messages can be appended as <message>
-             children -->
         <status-text type="string">n/a</status-text>
         <uplink/>
         <downlink/>

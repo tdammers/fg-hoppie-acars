@@ -5,6 +5,8 @@ var ACARS = {
             downlinkNode: props.globals.getNode('/acars/downlink', 1),
             uplinkNode: props.globals.getNode('/acars/uplink', 1),
             formattedLogNode: props.globals.getNode('/acars/formatted-log', 1),
+            urlTemplate: nil,
+            urlListener: nil,
             pollTimer: nil,
         };
     },
@@ -19,29 +21,66 @@ var ACARS = {
             me.pollTimer.start();
         }
         setprop('/acars/status-text', 'running');
+        var self = me;
+        me.urlListener = setlistener('/sim/hoppie/url', func { self.recalcUrlTemplate(); }, 1, 0);
     },
 
     stop: func () {
         if (me.pollTimer != nil) {
             me.pollTimer.stop();
         }
+        if (me.urlListener) {
+            removelistener(me.urlListener);
+            me.urlListener = nil;
+        }
         setprop('/acars/status-text', 'stopped');
+    },
+
+    recalcUrlTemplate: func () {
+        var template =
+                getprop('/sim/hoppie/url') or
+                    'http://www.hoppie.nl/acars/system/connect.html?logon={logon}&from={from}&to={to}&type={type}&packet={packet}';
+        var compiled = string.compileTemplate(template);
+        if (compiled != nil) {
+            me.urlTemplate = compiled;
+        }
+        else {
+            debug.warn("Invalid URL template, ACARS will not work");
+            me.urlTemplate = nil;
+        }
     },
 
     clearMessages: func() {
         me.formattedLogNode.setValue('');
     },
 
+    getCurrentTimestamp: func () {
+        var utcNode = props.globals.getNode('/sim/time/utc');
+        return sprintf('%04u%02u%02uT%02u%02u%02u',
+            utcNode.getValue('year'),
+            utcNode.getValue('month'),
+            utcNode.getValue('day'),
+            utcNode.getValue('hour'),
+            utcNode.getValue('minute'),
+            utcNode.getValue('second'));
+    },
+
     # Low-level ACARS send function
     send: func (to='', type='telex', packet='', done=nil) {
-        var logon = getprop('/sim/hoppie/token');
+        if (typeof(me.urlTemplate) != 'func') {
+            debug.warn("Invalid URL template, can't send ACARS message");
+            return;
+        }
         var from = getprop('/sim/multiplay/callsign');
-        var url = 'http://www.hoppie.nl/acars/system/connect.html?' ~
-                  'logon=' ~ urlencode(logon) ~
-                  '&from=' ~ urlencode(from) ~ 
-                  '&to=' ~ urlencode(to) ~
-                  '&type=' ~ urlencode(type) ~
-                  '&packet=' ~ urlencode(packet);
+        var params = {
+                'logon': urlencode(getprop('/sim/hoppie/token')),
+                'from': urlencode(from),
+                'to': urlencode(to),
+                'type': urlencode(type),
+                'packet': urlencode(packet),
+            };
+        var url = me.urlTemplate(params);
+
         var msgNode = nil;
         if (type != 'poll') {
             msgNode = me.downlinkNode;
@@ -49,7 +88,9 @@ var ACARS = {
             msgNode.setValue('to', to);
             msgNode.setValue('type', type);
             msgNode.setValue('packet', packet);
-            me.appendLog(sprintf(">>>> %s %s\n%s\n", to, type, packet));
+            var timestamp = me.getCurrentTimestamp();
+            msgNode.setValue('timestamp', timestamp);
+            me.appendLog(sprintf(">>>> %s %s %s\n%s\n", substr(timestamp, 9, 4), to, type, packet));
             msgNode.setValue('status', 'sending');
         }
         http.load(url)
@@ -84,12 +125,14 @@ var ACARS = {
     uplink: func(type, from, packet) {
         var to = getprop('/sim/multiplay/callsign');
         var msgNode = me.uplinkNode;
+        var timestamp = me.getCurrentTimestamp();
         msgNode.setValue('type', type);
         msgNode.setValue('from', from);
         msgNode.setValue('to', to);
         msgNode.setValue('packet', packet);
         msgNode.setValue('status', 'new');
-        me.appendLog(sprintf("<<<< %s %s\n%s\n", from, type, packet));
+        msgNode.setValue('timestamp', timestamp);
+        me.appendLog(sprintf("<<<< %s %s %s\n%s\n", substr(timestamp, 9, 4), from, type, packet));
     },
 
     appendLog: func(text) {
@@ -108,12 +151,17 @@ var ACARS = {
         var items = [];
 
         while (size(str) > 0) {
+            # consume leading '{'
             if (left(str, 1) != '{') {
                 debug.dump('PARSER ERROR 1: ' ~ str);
                 return items;
             }
             str = substr(str, 1);
+
+            # skip whitespace
             while (left(str, 1) == ' ') str = substr(str, 1);
+
+            # from
             i = find(' ', str);
             if (i < 0) {
                 debug.dump('PARSER ERROR 2: ' ~ str);
@@ -121,8 +169,11 @@ var ACARS = {
             }
             var from = left(str, i);
             str = substr(str, i + 1);
+
+            # skip whitespace
             while (left(str, 1) == ' ') str = substr(str, 1);
 
+            # type
             i = find(' ', str);
             if (i < 0) {
                 debug.dump('PARSER ERROR 3: ' ~ str);
@@ -130,8 +181,11 @@ var ACARS = {
             }
             var type = left(str, i);
             str = substr(str, i + 1);
+
+            # skip whitespace
             while (left(str, 1) == ' ') str = substr(str, 1);
 
+            # packet
             if (left(str, 1) != '{') {
                 debug.dump('PARSER ERROR 4: ' ~ str);
                 return items;
@@ -187,6 +241,9 @@ var unload = func(addon) {
 
 var main = func(addon) {
     globals.acars = ACARS.new();
+    if (getprop('/sim/hoppie/autostart')) {
+        globals.acars.start();
+    }
     var myMenuNode = findMenuNode(1);
     myMenuNode.setValues({
         enabled: 'true',
