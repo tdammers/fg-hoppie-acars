@@ -130,8 +130,8 @@ var ACARS = {
         msgNode.setValue('from', from);
         msgNode.setValue('to', to);
         msgNode.setValue('packet', packet);
-        msgNode.setValue('status', 'new');
         msgNode.setValue('timestamp', timestamp);
+        msgNode.setValue('status', 'new');
         me.appendLog(sprintf("<<<< %s %s %s\n%s\n", substr(timestamp, 9, 4), from, type, packet));
     },
 
