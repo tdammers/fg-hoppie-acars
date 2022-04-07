@@ -35,7 +35,7 @@
             <legend>Start</legend>
             <binding>
                 <command>nasal</command>
-                <script>globals.acars.start();</script>
+                <script>globals.hoppieAcars.start();</script>
             </binding>
         </button>
         <button>
@@ -43,7 +43,7 @@
             <legend>Stop</legend>
             <binding>
                 <command>nasal</command>
-                <script>globals.acars.stop();</script>
+                <script>globals.hoppieAcars.stop();</script>
             </binding>
         </button>
 
@@ -83,7 +83,7 @@
         <halign>right</halign>
         <binding>
             <command>nasal</command>
-            <script>globals.acars.clearMessages();</script>
+            <script>globals.hoppieAcars.clearMessages();</script>
         </binding>
     </button>
 
@@ -173,7 +173,7 @@
                     var to = string.uc(getprop('/hoppie/dialog/to'));
                     var message = string.uc(getprop('/hoppie/dialog/message'));
                     var type = string.lc(getprop('/hoppie/dialog/type'));
-                    acars.send(to, type, message);
+                    hoppieAcars.send(to, type, message);
                 ]]></script>
             </binding>
             <row>1</row>

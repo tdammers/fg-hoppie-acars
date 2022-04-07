@@ -60,7 +60,7 @@ var ACARS = {
     },
 
     # Low-level ACARS send function
-    send: func (to='', type='telex', packet='', done=nil) {
+    send: func (to='', type='telex', packet='', done=nil, failed=nil) {
         if (typeof(me.urlTemplate) != 'func') {
             debug.warn("Invalid URL template, can't send ACARS message");
             return;
@@ -99,6 +99,9 @@ var ACARS = {
             .fail(func {
                 if (msgNode != nil) {
                     msgNode.setValue('status', 'error');
+                }
+                if (typeof(failed) == 'func') {
+                    failed(r.response);
                 }
             });
     },
@@ -225,7 +228,7 @@ var findMenuNode = func (create=0) {
 };
 
 var unload = func(addon) {
-    globals.acars.stop();
+    globals.hoppieAcars.stop();
     var myMenuNode = findMenuNode();
     if (myMenuNode != nil) {
         myMenuNode.remove();
@@ -234,9 +237,9 @@ var unload = func(addon) {
 };
 
 var main = func(addon) {
-    globals.acars = ACARS.new();
+    globals.hoppieAcars = ACARS.new();
     if (getprop('/sim/hoppie/autostart')) {
-        globals.acars.start();
+        globals.hoppieAcars.start();
     }
     var myMenuNode = findMenuNode(1);
     myMenuNode.setValues({
