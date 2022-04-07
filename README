@@ -77,11 +77,11 @@ Nasal API
 Property Interface
 ------------------
 
-`/acars/status-text` - a textual indication of whether the ACARS system is
+`/hoppie/status-text` - a textual indication of whether the ACARS system is
     currently running.
-`/acars/uplink` - this node will hold one `message` child for each uplink
+`/hoppie/uplink` - this node will hold one `message` child for each uplink
     message enqueued or sent.
-`/acars/downlink` - this node will hold one `message` child for each downlink
+`/hoppie/downlink` - this node will hold one `message` child for each downlink
     message enqueued or sent.
-`/acars/formatted-log` - a formatted textual log of all uplink and downlink
+`/hoppie/formatted-log` - a formatted textual log of all uplink and downlink
     messages.

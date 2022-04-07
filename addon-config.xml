@@ -5,7 +5,7 @@
             <!-- <token userarchive="y" type="string" /> -->
         </hoppie>
     </sim>
-    <acars>
+    <hoppie>
         <status-text type="string">n/a</status-text>
         <uplink/>
         <downlink/>
@@ -15,5 +15,5 @@
             <type type="string">telex</type>
             <message type="string"/>
         </dialog>
-    </acars>
+    </hoppie>
 </PropertyList>

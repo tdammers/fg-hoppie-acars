@@ -2,16 +2,16 @@ var ACARS = {
     new: func () {
         return {
             parents: [ACARS],
-            downlinkNode: props.globals.getNode('/acars/downlink', 1),
-            uplinkNode: props.globals.getNode('/acars/uplink', 1),
-            formattedLogNode: props.globals.getNode('/acars/formatted-log', 1),
+            downlinkNode: props.globals.getNode('/hoppie/downlink', 1),
+            uplinkNode: props.globals.getNode('/hoppie/uplink', 1),
+            formattedLogNode: props.globals.getNode('/hoppie/formatted-log', 1),
             urlTemplate: nil,
-            urlListener: nil,
             pollTimer: nil,
         };
     },
 
     start: func () {
+        me.recalcUrlTemplate();
         if (me.pollTimer == nil) {
             me.pollTimer = maketimer(1, me, me.poll);
             me.pollTimer.simulatedTime = 1;
@@ -20,20 +20,14 @@ var ACARS = {
         if (!me.pollTimer.isRunning) {
             me.pollTimer.start();
         }
-        setprop('/acars/status-text', 'running');
-        var self = me;
-        me.urlListener = setlistener('/sim/hoppie/url', func { self.recalcUrlTemplate(); }, 1, 0);
+        setprop('/hoppie/status-text', 'running');
     },
 
     stop: func () {
         if (me.pollTimer != nil) {
             me.pollTimer.stop();
         }
-        if (me.urlListener) {
-            removelistener(me.urlListener);
-            me.urlListener = nil;
-        }
-        setprop('/acars/status-text', 'stopped');
+        setprop('/hoppie/status-text', 'stopped');
     },
 
     recalcUrlTemplate: func () {

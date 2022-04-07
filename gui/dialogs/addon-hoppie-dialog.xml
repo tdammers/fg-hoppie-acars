@@ -48,7 +48,7 @@
         </button>
 
         <text>
-            <property>/acars/status-text</property>
+            <property>/hoppie/status-text</property>
             <pref-width>100</pref-width>
             <live>true</live>
         </text>
@@ -76,7 +76,7 @@
         <wrap>true</wrap>
         <editable>false</editable>
         <top-line>-4</top-line>
-        <property>/acars/formatted-log</property>
+        <property>/hoppie/formatted-log</property>
     </textbox>
     <button>
         <legend>Clear</legend>
@@ -127,13 +127,13 @@
         <input>
             <width>100</width>
             <halign>left</halign>
-            <property>/acars/dialog/to</property>
+            <property>/hoppie/dialog/to</property>
             <name>to</name>
             <row>1</row>
             <col>1</col>
         </input>
         <combo>
-            <property>/acars/dialog/type</property>
+            <property>/hoppie/dialog/type</property>
             <name>type</name>
             <halign>left</halign>
             <value>telex</value>
@@ -148,7 +148,7 @@
         <input>
             <pref-width>200</pref-width>
             <halign>left</halign>
-            <property>/acars/dialog/message</property>
+            <property>/hoppie/dialog/message</property>
             <name>message</name>
             <row>1</row>
             <col>3</col>
@@ -170,9 +170,9 @@
             <binding>
                 <command>nasal</command>
                 <script><![CDATA[
-                    var to = string.uc(getprop('/acars/dialog/to'));
-                    var message = string.uc(getprop('/acars/dialog/message'));
-                    var type = string.lc(getprop('/acars/dialog/type'));
+                    var to = string.uc(getprop('/hoppie/dialog/to'));
+                    var message = string.uc(getprop('/hoppie/dialog/message'));
+                    var type = string.lc(getprop('/hoppie/dialog/type'));
                     acars.send(to, type, message);
                 ]]></script>
             </binding>
