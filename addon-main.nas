@@ -93,7 +93,7 @@ var ACARS = {
                     msgNode.setValue('status', 'sent');
                 }
                 if (typeof(done) == 'func') {
-                    done(r.response);
+                    call(done, [r.response]);
                 }
             })
             .fail(func {
@@ -101,7 +101,7 @@ var ACARS = {
                     msgNode.setValue('status', 'error');
                 }
                 if (typeof(failed) == 'func') {
-                    failed(r.response);
+                    call(failed, [r.response]);
                 }
             });
     },
