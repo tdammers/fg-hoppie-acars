@@ -7,6 +7,7 @@ var ACARS = {
             formattedLogNode: props.globals.getNode('/hoppie/formatted-log', 1),
             urlTemplate: nil,
             pollTimer: nil,
+            autostartListener: nil,
         };
     },
 
@@ -28,6 +29,28 @@ var ACARS = {
             me.pollTimer.stop();
         }
         setprop('/hoppie/status-text', 'stopped');
+    },
+
+    enableAutostart: func () {
+        if (me.autostartListener == nil) {
+            var self = me;
+            me.autostartListener = setlistener('/sim/swift/serverRunning', func (node) {
+                if (node.getBoolValue()) {
+                    self.start();
+                }
+                else {
+                    self.stop();
+                }
+            });
+        }
+    },
+
+    disableAutostart: func () {
+        if (me.autostartListener != nil) {
+            removelistener(me.autostartListener);
+            me.autostartListener = nil;
+        }
+        me.stop();
     },
 
     recalcUrlTemplate: func () {
@@ -239,7 +262,7 @@ var unload = func(addon) {
 var main = func(addon) {
     globals.hoppieAcars = ACARS.new();
     if (getprop('/sim/hoppie/autostart')) {
-        globals.hoppieAcars.start();
+        globals.hoppieAcars.enableAutostart();
     }
     var myMenuNode = findMenuNode(1);
     myMenuNode.setValues({

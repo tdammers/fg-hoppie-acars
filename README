@@ -47,7 +47,7 @@ preferences.xml:
               -->
             <url type="string">http://www.hoppie.nl/acars/system/connect.html?logon={logon}&from={from}&to={to}&type={type}&packet={packet}</url>
 
-            <!-- If true, automatically start Hoppie ACARS upon load. -->
+            <!-- If true, automatically start Hoppie ACARS when the Swift server is enabled. -->
             <autostart type="bool">false</autostart>
         </hoppie>
     </sim>
