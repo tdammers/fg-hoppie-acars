@@ -7,6 +7,7 @@ var ACARS = {
             formattedLogNode: props.globals.getNode('/hoppie/formatted-log', 1),
             urlTemplate: nil,
             pollTimer: nil,
+            pollCounter: 0,
             autostartListener: nil,
         };
     },
@@ -130,12 +131,18 @@ var ACARS = {
     },
 
     poll: func () {
-        me.send('ZZZZ', 'poll', '', func(rp) {
-            var items = me.parsePollResponse(rp);
-            foreach (var item; items) {
-                me.processResponse(item);
-            }
-        });
+        if (me.pollCounter > 0) {
+            me.pollCounter -= 1;
+        }
+        else {
+            me.send('ZZZZ', 'poll', '', func(rp) {
+                var items = me.parsePollResponse(rp);
+                foreach (var item; items) {
+                    me.processResponse(item);
+                }
+            });
+            me.pollCounter = math.floor(rand() * 30 + 45);
+        }
     },
 
     processResponse: func(item) {
